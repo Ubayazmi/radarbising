@@ -7,3 +7,10 @@ sessions/
 .vscode/
 .DS_Store
 Thumbs.db
+assets/
+admin/uploads/
+writer/
+node_modules/
+vendor/
+*.zip
+*.tgz
