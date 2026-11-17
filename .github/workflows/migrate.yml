@@ -4,23 +4,15 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Dry run only (no data written)'
+        description: 'Dry run only (validate + count, no data written)'
         required: false
         type: boolean
         default: false
-  push:
-    branches: [main]
-    paths:
-      - 'supabase/schema.sql'
-      - 'migrate.php'
-      - 'composer.json'
-      - 'composer.lock'
-      - '.github/workflows/migrate.yml'
 
 jobs:
   migrate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -36,38 +28,55 @@ jobs:
             pdo_pgsql
             mbstring
             iconv
-            gd
             curl
           ini-values: |
             memory_limit=512M
-            max_execution_time=300
+            max_execution_time=600
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Install Supabase CLI
-        run: npm install -g supabase
-
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      - name: Backup SQLite
-        run: |
-          cp database.sqlite database.sqlite.bak
-          echo "✓ Backup created"
-
-      - name: Apply Supabase Schema
+      - name: Download SQLite source from Supabase Storage (private bucket)
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          supabase link --project-ref $SUPABASE_PROJECT_ID
-          supabase db push --schema-file supabase/schema.sql
+          # Service role key allows direct download from private buckets
+          curl -sSf -o database.sqlite \
+            -H "apikey: $SUPABASE_SERVICE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            "$SUPABASE_URL/storage/v1/object/migration-source/database.sqlite" \
+            || (echo "ERROR: failed to download database.sqlite from private bucket 'migration-source'" && exit 1)
+          ls -la database.sqlite
+
+      - name: Verify SQLite source
+        run: |
+          php -r '
+            $db = new PDO("sqlite:database.sqlite");
+            $tables = ["users","articles","videos","login_logs","settings"];
+            $total = 0;
+            foreach ($tables as $t) {
+                $c = (int)$db->query("SELECT COUNT(*) FROM $t")->fetchColumn();
+                echo "$t: $c rows\n";
+                $total += $c;
+            }
+            echo "Total: $total rows\n";
+            if ($total === 0) { fwrite(STDERR, "ERROR: empty source DB\n"); exit(1); }
+          '
+
+      - name: Apply Supabase Schema (idempotent)
+        env:
+          DB_DSN: ${{ secrets.DB_DSN }}
+        run: |
+          psql "$DB_DSN" -v ON_ERROR_STOP=1 -f supabase/schema.sql
 
       - name: Run Migration (Dry Run)
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == true }}
+        if: ${{ inputs.dry_run == true }}
         env:
           DB_DSN: ${{ secrets.DB_DSN }}
           SQLITE_PATH: database.sqlite
@@ -75,44 +84,55 @@ jobs:
           php migrate.php --dry-run
 
       - name: Run Migration (Live)
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == false }}
+        if: ${{ inputs.dry_run == false }}
         env:
           DB_DSN: ${{ secrets.DB_DSN }}
           SQLITE_PATH: database.sqlite
         run: |
           php migrate.php
 
-      - name: Verify Migration
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == false }}
-        env:
-          DB_DSN: ${{ secrets.DB_DSN }}
+      - name: Verify Migration Result
+        if: ${{ inputs.dry_run == false }}
         run: |
           php -r '
-            $pg = new PDO($ENV["DB_DSN"]);
+            $dsn = getenv("DB_DSN");
+            $pg = new PDO($dsn);
+            $sqlite = new PDO("sqlite:database.sqlite");
             $tables = ["users","articles","videos","login_logs","settings"];
+            $ok = true;
             foreach ($tables as $t) {
-                $count = $pg->query("SELECT COUNT(*) FROM $t")->fetchColumn();
-                echo "$t: $count rows\n";
+                $src = (int)$sqlite->query("SELECT COUNT(*) FROM $t")->fetchColumn();
+                $dst = (int)$pg->query("SELECT COUNT(*) FROM $t")->fetchColumn();
+                $status = $src === $dst ? "OK" : "MISMATCH";
+                if ($src !== $dst) $ok = false;
+                printf("%-12s source=%-4d target=%-4d %s\n", $t, $src, $dst, $status);
             }
-            // Verify sequences
-            foreach ($tables as $t) {
-                $seq = $pg->query("SELECT last_value FROM {$t}_id_seq")->fetchColumn();
-                echo "$t sequence: $seq\n";
-            }
+            echo "sessions table (must be empty pre Plan 03): " .
+                 (int)$pg->query("SELECT COUNT(*) FROM sessions")->fetchColumn() . "\n";
+            exit($ok ? 0 : 1);
           '
 
-      - name: Create Storage Bucket
+      - name: Create Storage Bucket (uploads)
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          supabase storage buckets create radarbising-uploads --public 2>/dev/null || echo "Bucket already exists"
+          curl -sSf -X POST -H "apikey: $SUPABASE_SERVICE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            -H "Content-Type: application/json" \
+            -d \'{"id":"radarbising-uploads","public":true}\' \
+            "$SUPABASE_URL/storage/v1/bucket" \
+            || echo "Bucket 'radarbising-uploads' already exists or creation skipped"
+
+      - name: Remove SQLite source from runner
+        if: always()
+        run: rm -f database.sqlite
 
       - name: Summary
         if: always()
         run: |
-          echo "### Migration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "### Supabase Migration" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Trigger: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Dry run: ${{ github.event.inputs.dry_run || 'false' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Branch: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Run: ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Dry run: ${{ inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Actor: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
