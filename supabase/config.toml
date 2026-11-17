@@ -1,0 +1,41 @@
+# =============================================================================
+# Radar Bising — Supabase Project Configuration
+# This file configures the local Supabase development environment.
+# For migrations to remote Supabase, see .github/workflows/supabase-migrations.yml
+# =============================================================================
+
+# A string used to distinguish different Supabase projects on the same host.
+project_id = "radarbising"
+
+[api]
+enabled = true
+port = 54321
+schemas = []
+extra_search_path = ["public", "extensions"]
+
+[db]
+port = 54322
+major_version = 15
+owner = "postgres"
+pool_size = 20
+
+[studio]
+enabled = true
+port = 54323
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://127.0.0.1:3000"]
+jwt_expiration = 3600
+enable_signup = true
+
+[analytics]
+enabled = false
+
+[edge_runtime]
+enabled = false

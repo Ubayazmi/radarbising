@@ -1,18 +1,19 @@
-name: Supabase Migration
+name: SQLite Data Migration (One-Time)
 
 on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Dry run only (validate + count, no data written)'
-        required: false
+        description: 'Dry run only — validate counts, do NOT write data'
         type: boolean
-        default: false
+        required: false
+        default: true
 
 jobs:
-  migrate:
+  migrate-data:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    environment: production
 
     steps:
       - name: Checkout repository
@@ -41,12 +42,30 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      - name: Download SQLite source from Supabase Storage (private bucket)
+      - name: Verify Schema Exists (Prerequisite)
+        env:
+          DB_DSN: ${{ secrets.DB_DSN }}
+        run: |
+          echo "=== Verifying PostgreSQL schema exists (required before data migration) ==="
+          tables=$(psql "$DB_DSN" -t -A -c "
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_name IN ('users','articles','videos','login_logs','settings','sessions');
+          ")
+          echo "$tables"
+          count=$(echo "$tables" | grep -c '^')
+          if [[ $count -ne 6 ]]; then
+            echo "::error::Schema not fully applied. Expected 6 tables, found $count."
+            echo "Run 'Supabase Schema Migrations' workflow first to apply schema."
+            exit 1
+          fi
+          echo "✅ All 6 tables present."
+
+      - name: Download SQLite Source from Supabase Storage (Private Bucket)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          # Service role key allows direct download from private buckets
+          echo "=== Downloading SQLite source from bucket 'migration-source' ==="
           curl -sSf -o database.sqlite \
             -H "apikey: $SUPABASE_SERVICE_KEY" \
             -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
@@ -54,8 +73,9 @@ jobs:
             || (echo "ERROR: failed to download database.sqlite from private bucket 'migration-source'" && exit 1)
           ls -la database.sqlite
 
-      - name: Verify SQLite source
+      - name: Verify SQLite Source
         run: |
+          echo "=== Verifying SQLite source data ==="
           php -r '
             $db = new PDO("sqlite:database.sqlite");
             $tables = ["users","articles","videos","login_logs","settings"];
@@ -69,31 +89,30 @@ jobs:
             if ($total === 0) { fwrite(STDERR, "ERROR: empty source DB\n"); exit(1); }
           '
 
-      - name: Apply Supabase Schema (idempotent)
-        env:
-          DB_DSN: ${{ secrets.DB_DSN }}
-        run: |
-          psql "$DB_DSN" -v ON_ERROR_STOP=1 -f supabase/schema.sql
-
-      - name: Run Migration (Dry Run)
+      - name: Run Data Migration (Dry Run)
         if: ${{ inputs.dry_run == true }}
         env:
           DB_DSN: ${{ secrets.DB_DSN }}
           SQLITE_PATH: database.sqlite
         run: |
+          echo "=== DRY RUN: php migrate.php --dry-run ==="
           php migrate.php --dry-run
 
-      - name: Run Migration (Live)
+      - name: Run Data Migration (Live)
         if: ${{ inputs.dry_run == false }}
         env:
           DB_DSN: ${{ secrets.DB_DSN }}
           SQLITE_PATH: database.sqlite
         run: |
+          echo "=== LIVE: php migrate.php ==="
           php migrate.php
 
       - name: Verify Migration Result
         if: ${{ inputs.dry_run == false }}
+        env:
+          DB_DSN: ${{ secrets.DB_DSN }}
         run: |
+          echo "=== Verifying migrated data counts ==="
           php -r '
             $dsn = getenv("DB_DSN");
             $pg = new PDO($dsn);
@@ -107,8 +126,8 @@ jobs:
                 if ($src !== $dst) $ok = false;
                 printf("%-12s source=%-4d target=%-4d %s\n", $t, $src, $dst, $status);
             }
-            echo "sessions table (must be empty pre Plan 03): " .
-                 (int)$pg->query("SELECT COUNT(*) FROM sessions")->fetchColumn() . "\n";
+            $sessions = (int)$pg->query("SELECT COUNT(*) FROM sessions")->fetchColumn();
+            echo "sessions table (must be empty pre Plan 03): $sessions\n";
             exit($ok ? 0 : 1);
           '
 
@@ -117,22 +136,28 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
+          echo "=== Creating storage bucket 'radarbising-uploads' ==="
           curl -sSf -X POST -H "apikey: $SUPABASE_SERVICE_KEY" \
             -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
             -H "Content-Type: application/json" \
-            -d \'{"id":"radarbising-uploads","public":true}\' \
+            -d '{"id":"radarbising-uploads","public":true}' \
             "$SUPABASE_URL/storage/v1/bucket" \
             || echo "Bucket 'radarbising-uploads' already exists or creation skipped"
 
-      - name: Remove SQLite source from runner
+      - name: Remove SQLite Source from Runner
         if: always()
         run: rm -f database.sqlite
 
       - name: Summary
         if: always()
         run: |
-          echo "### Supabase Migration" >> $GITHUB_STEP_SUMMARY
+          echo "### SQLite Data Migration Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Run: ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
           echo "- Dry run: ${{ inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
           echo "- Actor: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+            echo "- Status: **Dry run completed** — no data written." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Status: **Live migration completed** — data written to Supabase." >> $GITHUB_STEP_SUMMARY
+          fi

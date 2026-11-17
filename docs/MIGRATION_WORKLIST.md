@@ -1,6 +1,6 @@
 # Migration Worklist — Radar Bising (Plan 02–05)
 
-> Checklist pekerjaan yang harus diselesaikan setelah audit (Plan 01).  
+> Checklist pekerjaan yang harus diselesaikan setelah audit (Plan 01).
 > Setiap item: `[ ]` = belum, `[x]` = selesai. Update saat dikerjakan.
 
 ---
@@ -8,19 +8,23 @@
 ## Plan 02 — Database Migration (SQLite → Supabase PostgreSQL)
 
 ### 02.1 Schema Design & DDL ✅ DONE
-- [x] Buat `supabase/schema.sql` dengan tabel: `articles`, `videos`, `users`, `login_logs`, `settings`, `sessions`
-- [x] Tipe data PG: `BIGSERIAL` PK, `TIMESTAMPTZ`, `BOOLEAN`, `TEXT`, `UNIQUE`, `CHECK` constraints
-- [x] Foreign Keys (string match `author` → `users.full_name`)
-- [x] Indexes untuk performa (category, author, headline, published_at, slug)
-- [x] Tabel `sessions` untuk custom PHP session handler
-- [x] Triggers auto-update `updated_at`
-- [x] RLS policies placeholder
-- [x] Initial `settings` row
+- [x] Buat `supabase/migrations/20261117000000_init.sql` — **initial migration** (source of truth)
+  - 6 tabel: `users`, `articles`, `videos`, `login_logs`, `settings`, `sessions`
+  - Enums: `user_role`, `portal_type`
+  - Tipe data PG: `BIGSERIAL` PK, `TIMESTAMPTZ`, `BOOLEAN`, `TEXT`, `UNIQUE`, `CHECK` constraints
+  - Foreign Keys (string match `author` → `users.full_name`)
+  - Indexes untuk performa (category, author, headline, published_at, slug)
+  - Tabel `sessions` untuk custom PHP session handler (Plan 03)
+  - Triggers auto-update `updated_at`
+  - RLS policies placeholder (disabled by default)
+  - Initial `settings` row
+- [x] Buat `supabase/config.toml` — Supabase CLI project config
+- [x] Update `supabase/schema.sql` — deprecation notice, retained as reference only
 
-**File:** `supabase/schema.sql` — siap dijalankan di Supabase SQL Editor
+**File utama:** `supabase/migrations/` — **single source of truth**
 
-### 02.2 Migration Script ✅ DONE
-- [x] Buat script PHP `migrate.php` (CLI) dengan:
+### 02.2 Migration Script (Data Only) ✅ DONE
+- [x] Script PHP `migrate.php` (CLI) untuk **migrasi data sekali saja** SQLite → PostgreSQL:
   - Baca SQLite via PDO (`pdo_sqlite`)
   - Tulis ke PostgreSQL via PDO (`pdo_pgsql` + SSL)
   - Type casting: `INTEGER` → `BIGINT`, date strings → `TIMESTAMPTZ`
@@ -29,40 +33,55 @@
   - Reset sequences (`setval`) setelah migrasi
   - `--dry-run` mode untuk test
 
-**File:** `migrate.php` — siap dijalankan: `php migrate.php`
+**File:** `migrate.php` — **hanya untuk data migration sekali jalan**, bukan untuk upgrade schema.
 
 ### 02.3 Dependencies & Config ✅ DONE
 - [x] `composer.json` dengan `vlucas/phpdotenv` (untuk load `.env` local dev)
 - [x] `composer install --no-dev --optimize-autoloader` → `vendor/` ready
 - [x] `.env.example` template dengan semua variabel yang dibutuhkan
 
-### 02.4 Pre-Migration Checklist (Automation via GitHub Actions)
-- [x] **GitHub Actions workflow** `.github/workflows/migrate.yml` — download SQLite dari bucket private `migration-source`, terapkan `supabase/schema.sql` (psql, idempoten), jalankan `migrate.php` (dry-run/live), verifikasi row counts, buat bucket `radarbising-uploads` via API, hapus SQLite dari runner (commit `78e8285`, fix `309899e`)
-- [x] **Panduan setup** `SECRETS_SETUP.md` + `README_MIGRATION.md` (committed)
+### 02.4 Pre-Migration Checklist (GitHub Actions Automation)
+- [x] **GitHub Actions: Schema Migration** `.github/workflows/supabase-migrations.yml`
+  - Recurring deployment via `supabase db push`
+  - Dry-run default (report pending, no apply)
+  - Destructive change detection (DROP, TRUNCATE, DELETE, ALTER...DROP, REVOKE)
+  - Apply requires explicit `dry_run=false AND apply=true`
+  - Verifies via `supabase_migrations.schema_migrations` table
+- [x] **GitHub Actions: Data Migration** `.github/workflows/migrate-sqlite-data.yml`
+  - One-time only (manual trigger)
+  - Prerequisite: schema must exist (fails if 6 tables missing)
+  - Downloads SQLite dari bucket private `migration-source`
+  - Runs `migrate.php` (dry-run/live), verifies counts
+  - Creates bucket `radarbising-uploads` (public)
+- [x] **Panduan setup** `SECRETS_SETUP.md`, `README_MIGRATION.md`, `SUPABASE_MIGRATION_GUIDE.md`, `DATABASE_MIGRATION_REPORT.md` (committed)
 - [ ] **Supabase Project** tersedia (diklaim siap oleh user — akan terverifikasi saat dry run)
-- [ ] **6 GitHub Secrets** di-set (lihat `SECRETS_SETUP.md`): `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `DB_DSN`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
+- [ ] **6 GitHub Secrets** di-set (lihat `SECRETS_SETUP.md`):
+  - `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_ID`, `DB_DSN` (untuk schema workflow)
+  - `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `DB_DSN` (untuk data workflow)
+  - `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (untuk deploy workflow)
 - [ ] **Bucket private `migration-source`** dibuat di Supabase Storage + `database.sqlite` di-upload ke dalamnya
-- [ ] **Jalankan workflow** di GitHub Actions → **Supabase Migration → Run workflow** (centang **Dry run** dulu untuk validasi, lalu live). Workflow otomatis menjalankan: terapkan schema → migrasi → verifikasi → buat bucket `radarbising-uploads`
+- [ ] **Jalankan Schema Migration** di GitHub Actions → **Supabase Schema Migrations → Run workflow**
+  - **Dry run dulu** (`dry_run=true`) → verifikasi pending migrations + destructive scan
+  - **Live** (`dry_run=false, apply=true`) → `supabase db push` terapkan pending migrations
+- [ ] **Jalankan Data Migration** di GitHub Actions → **SQLite Data Migration → Run workflow**
+  - **Dry run dulu** → validasi counts tanpa menulis
+  - **Live** → eksekusi `migrate.php`, verifikasi row counts match
 - [ ] **Environment Variables** diset di **Vercel Dashboard** (Project Settings → Environment Variables):
   | Variable | Description | Source |
   |----------|-------------|--------|
   | `SUPABASE_URL` | `https://<ref>.supabase.co` | Supabase Dashboard → Settings → API |
   | `SUPABASE_ANON_KEY` | `anon` public key | Supabase Dashboard → Settings → API |
   | `SUPABASE_SERVICE_KEY` | `service_role` secret key | Supabase Dashboard → Settings → API |
-  | `DB_DSN` | `pgsql:host=db.<ref>.supabase.co;port=5432;dbname=postgres;user=postgres;password=***;sslmode=require` | Supabase Dashboard → Settings → Database → Connection String (Transaction Pooler atau Direct) |
+  | `DB_DSN` | **Transaction Pooler (port 6543)**: `pgsql:host=aws-0-<region>.pooler.supabase.com;port=6543;dbname=postgres;user=postgres.<ref>;password=***;sslmode=require` | Supabase Dashboard → Settings → Database |
   | `SESSION_SECRET` | 32 bytes hex (`openssl rand -hex 32`) | Generate locally |
   | `UPLOAD_DRIVER` | `supabase` | Fixed |
   | `SUPABASE_STORAGE_BUCKET` | `radarbising-uploads` | Fixed |
   | `APP_ENV` | `production` | Fixed |
   | `APP_DEBUG` | `false` | Fixed |
-- [ ] **Jalankan workflow** di GitHub Actions → **Supabase Migration → Run workflow** (centang **Dry run** dulu untuk validasi, lalu live). Workflow otomatis menjalankan: terapkan schema → migrasi → verifikasi → buat bucket `radarbising-uploads`
-- [ ] **Run `supabase/schema.sql`** — ditangani otomatis oleh workflow saat migrasi berjalan
-- [ ] **Storage bucket `radarbising-uploads`** — ditangani otomatis oleh workflow saat migrasi berjalan
-- [ ] **Verifikasi**: Bandingkan `SELECT COUNT(*)` per tabel SQLite vs PostgreSQL — diverifikasi otomatis oleh workflow (step "Verify Migration Result", gagal jika mismatch)
 
 ### 02.5 Post-Migration Verification
-- [ ] **Cek data row counts** — diverifikasi otomatis oleh workflow (step "Verify Migration Result", gagal jika mismatch)
-- [ ] **Tabel `sessions` tetap kosong** — diverifikasi otomatis oleh workflow (harus 0 sebelum Plan 03)
+- [ ] **Cek data row counts** — diverifikasi otomatis oleh data workflow (step "Verify Migration Result", gagal jika mismatch)
+- [ ] **Tabel `sessions` tetap kosong** — diverifikasi otomatis (harus 0 sebelum Plan 03)
 - [ ] **Cek sequence values**: `SELECT last_value FROM <table>_id_seq` (manual setelah live run)
 - [ ] **Login test**: Admin, Editor, Writer (via Supabase DB users)
 
@@ -71,31 +90,20 @@
 ## Plan 03 — Code Adaptation (App → Supabase + Vercel-ready)
 
 ### 03.1 Database Connection & Config
-- [ ] Tambah `composer.json` dengan dependensi minimal:
+- [ ] Update `composer.json` dengan dependensi:
   ```json
   {
     "require": {
       "vlucas/phpdotenv": "^5.6",
-      "supabase/supabase-php": "^1.0"  // atau aws/aws-sdk-php untuk S3
+      "supabase/supabase-php": "^1.0"
     },
     "require-dev": {}
   }
   ```
-- [ ] Buat `.env.example`:
-  ```env
-  APP_ENV=production
-  APP_DEBUG=false
-  SUPABASE_URL=https://xxx.supabase.co
-  SUPABASE_ANON_KEY=xxx
-  SUPABASE_SERVICE_KEY=xxx
-  DB_DSN=pgsql:host=db.xxx.supabase.co;port=5432;dbname=postgres;user=postgres;password=xxx;sslmode=require
-  SESSION_SECRET=generate-32-bytes-hex
-  UPLOAD_DRIVER=supabase  # atau s3
-  SUPABASE_STORAGE_BUCKET=radarbising-uploads
-  ```
+- [ ] Buat `.env.example` lengkap (sudah ada, review & update)
 - [ ] Update `admin/includes/db.php`, `writer/includes/writer_db.php`, `index.php`:
-  - Load `.env` via `Dotenv` (dev) / `$_ENV` (prod)
-  - DSN dari `DB_DSN` env var
+  - Load `.env` via `Dotenv` (dev) / `$_ENV` (prod Vercel)
+  - DSN dari `DB_DSN` env var (pooler untuk Vercel, direct untuk migration)
   - Set `PDO::ATTR_EMULATE_PREPARES => false`
 - [ ] Hapus referensi `database.sqlite` path hardcoded
 
@@ -122,8 +130,9 @@
 - [ ] Refactor `uploadImage()` di `admin/includes/helpers.php` & `writer/includes/writer_helpers.php`:
   - Deteksi env `VERCEL` atau `UPLOAD_DRIVER=supabase`
   - Simpan file sementara → upload → return URL (simpan URL penuh di DB, bukan path relatif)
-  - Hapus `getimagesize()` dependency? (bisa tetep pakai untuk validasi)
-- [ ] Update DB schema: `articles.image`, `videos.thumbnail`, `settings.site_logo`, `settings.site_favicon` → `TEXT` URL (bukan path)
+  - `getimagesize()` tetap untuk validasi
+- [ ] Update DB schema via **new migration** (bukan edit init.sql):
+  - `articles.image`, `videos.thumbnail`, `settings.site_logo`, `settings.site_favicon` → `TEXT` URL
 - [ ] Migrasi file existing di `admin/uploads/` ke Supabase Storage (script satu kali)
 
 ### 03.4 Query Compatibility Fixes
@@ -135,9 +144,7 @@
 
 ### 03.5 Cleanup & Hardcoded Removal
 - [ ] Hapus `$WRITERS` fallback array di `writer/includes/writer_auth.php`
-- [ ] Hapus `assets/` dari repo (sudah di `.gitignore`, pastikan tidak ter-track)
-- [ ] Hapus `sessions/` folder lokal (sudah di `.gitignore`)
-- [ ] Hapus `database.sqlite` dari repo (sudah di `.gitignore`)
+- [ ] Pastikan `assets/`, `sessions/`, `database.sqlite*` tidak ter-track (sudah di `.gitignore`)
 - [ ] Hapus `dump_schema.php`, `dump_schema2.php` (audit artifacts)
 
 ---
@@ -201,26 +208,24 @@
   ```
 
 ### 04.2 Environment Variables di Vercel Dashboard
-- [ ] Set Project Settings → Environment Variables:
+- [ ] Set Project Settings → Environment Variables (Production + Preview):
   - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`
-  - `DB_DSN` (PostgreSQL connection string dengan `sslmode=require`)
+  - `DB_DSN` (Transaction Pooler, port 6543, `sslmode=require`)
   - `SESSION_SECRET` (32 bytes hex, `openssl rand -hex 32`)
   - `UPLOAD_DRIVER=supabase`
   - `SUPABASE_STORAGE_BUCKET=radarbising-uploads`
   - `APP_ENV=production`, `APP_DEBUG=false`
 
 ### 04.3 Supabase Setup
-- [ ] Buat project Supabase baru (atau gunakan existing)
-- [ ] Jalankan `schema.sql` di SQL Editor
-- [ ] Buat Storage bucket `radarbising-uploads` (public atau signed URL)
-- [ ] Set RLS policies jika perlu (opsional, app handle auth)
+- [ ] Project Supabase sudah dibuat (dikonfirmasi user)
+- [ ] Schema sudah diterapkan via `supabase-migrations.yml` workflow
+- [ ] Storage bucket `radarbising-uploads` (public) dibuat via workflow
+- [ ] RLS policies: disabled by default (app uses service role)
 - [ ] Enable `pg_stat_statements` untuk monitoring
 
 ### 04.4 CI/CD (GitHub Actions)
-- [ ] Buat `.github/workflows/vercel.yml`:
-  - Trigger: push to `main`, PR
-  - Jobs: lint (PHPStan/PHP_CodeSniffer optional), test (jika ada), deploy preview via Vercel CLI
-  - Vercel CLI: `vercel --token=${VERCEL_TOKEN} --scope=${VERCEL_ORG_ID}`
+- [ ] Workflow `deploy.yml` sudah committed (preview on push, manual → production)
+- [ ] Verify Vercel secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
 
 ---
 
@@ -289,9 +294,9 @@
 | Plan | Status | Target Selesai | Catatan |
 |------|--------|----------------|---------|
 | 01 Audit | ✅ Done | 2026-11-17 | `docs/AUDIT_REPORT.md`, `docs/MIGRATION_WORKLIST.md` |
-| 02 DB Migration | 🟡 **Automation Siap** | | Schema, script, deps, GitHub Actions ready — tinggal set 6 GitHub Secrets + upload SQLite ke bucket `migration-source` + Run workflow |
-| 03 Code Adapt | ⬜ Pending | | Depends on 02 completion |
-| 04 Vercel Config | ⬜ Pending (deploy workflow ✅) | | Workflow `.github/workflows/deploy.yml` sudah committed; `vercel.json`/Dockerfile belum |
+| 02 DB Migration | 🟡 **Automation Siap** | | Schema migration + data migration workflows ready. Butuh: 6 GitHub Secrets + upload SQLite ke `migration-source` + run workflows |
+| 03 Code Adapt | ⬜ Pending | | Depends on 02 completion (schema applied + data migrated) |
+| 04 Vercel Config | ⬜ Pending (deploy workflow ✅) | | `deploy.yml` ready; `vercel.json`/Dockerfile/.vercelignore belum |
 | 05 Testing/Go-Live | ⬜ Pending | | After 03+04 |
 
 ---

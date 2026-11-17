@@ -48,8 +48,10 @@ Di **Vercel Dashboard → Project → Settings → Environment Variables**, set 
 
 1. Siapkan semua secret di atas di GitHub.
 2. Upload `database.sqlite` ke bucket private `migration-source`.
-3. Buka **Actions → Supabase Migration → Run workflow** → branch `main`.
+3. Buka **Actions → Supabase Schema Migrations → Run workflow** → branch `main`.
 4. Centang **Dry run** dulu untuk validasi tanpa menulis data.
-5. Setelah dry run OK, jalankan lagi tanpa centang untuk eksekusi live.
+5. Setelah dry run OK, jalankan lagi tanpa centang, tambah **Apply** untuk eksekusi live.
+6. Setelah schema OK, buka **Actions → SQLite Data Migration → Run workflow** → centang **Dry run** dulu.
+7. Setelah dry run OK, jalankan lagi tanpa centang untuk migrasi data live.
 
-> Catatan: `supabase/schema.sql` menggunakan `CREATE TABLE IF NOT EXISTS`, jadi aman dijalankan berulang. Data menggunakan `ON CONFLICT (id) DO NOTHING`, jadi migrasi idempoten.
+> Catatan: Migrasi schema (`supabase-migrations.yml`) dan migrasi data (`migrate-sqlite-data.yml`) dipisah. Schema harus diterapkan dulu sebelum data.
