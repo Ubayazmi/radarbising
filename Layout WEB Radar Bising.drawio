@@ -1,0 +1,54 @@
+<mxfile host="Electron" pages="2">
+  <diagram name="Page-1" id="aYKz4Y7SgRWnfn24ZoJJ">
+    <mxGraphModel dx="1585" dy="963" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Z0t4HodSb5ib1QnS9bvf-13" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="SLIDE HEADER&lt;div&gt;(auto slide per-2 detik, dengan menampilkan artikel dan video pilihan custom by admin)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="210" width="760" x="40" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="Z0t4HodSb5ib1QnS9bvf-14" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;rotation=0;" value="Artikel 1" vertex="1">
+          <mxGeometry height="240" width="160" x="40" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="Z0t4HodSb5ib1QnS9bvf-15" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;rotation=0;" value="Artikel 2" vertex="1">
+          <mxGeometry height="240" width="160" x="241" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="Z0t4HodSb5ib1QnS9bvf-16" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;rotation=0;" value="Artikel 3" vertex="1">
+          <mxGeometry height="240" width="160" x="440" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="Z0t4HodSb5ib1QnS9bvf-17" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;rotation=0;" value="Artikel 4" vertex="1">
+          <mxGeometry height="240" width="160" x="640" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="Z0t4HodSb5ib1QnS9bvf-18" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="show more" vertex="1">
+          <mxGeometry height="40" width="270" x="280" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="Z0t4HodSb5ib1QnS9bvf-20" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;rotation=0;" value="Video 1" vertex="1">
+          <mxGeometry height="240" width="160" x="35" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="Z0t4HodSb5ib1QnS9bvf-21" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;rotation=0;" value="Video 2" vertex="1">
+          <mxGeometry height="240" width="160" x="236" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="Z0t4HodSb5ib1QnS9bvf-22" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;rotation=0;" value="Video 3" vertex="1">
+          <mxGeometry height="240" width="160" x="435" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="Z0t4HodSb5ib1QnS9bvf-23" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;rotation=0;" value="Video 4" vertex="1">
+          <mxGeometry height="240" width="160" x="635" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="Z0t4HodSb5ib1QnS9bvf-24" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="show more" vertex="1">
+          <mxGeometry height="40" width="270" x="285" y="960" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="wKMDgeR17KHNFFfRhamS" name="Page-2">
+    <mxGraphModel dx="1030" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="KRkh_X0X-tEICY_O5VYb-1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;rotation=0;align=left;" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;(cover image konten)&lt;/div&gt;&lt;div style=&quot;text-align: justify;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(#000000, var(--ge-light-color, #ffffff)); text-align: left;&quot;&gt;BARIS 1 JUDUL&lt;/span&gt;&lt;/div&gt;&lt;div&gt;BARiS 2 JUDUL&lt;/div&gt;&lt;div&gt;baris 2 isi konten&lt;/div&gt;&lt;div&gt;baris 2 isi konten&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;(garis pemisah)&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;(kategori)&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;&amp;nbsp; &amp;nbsp;tanggal upload&lt;/div&gt;" vertex="1">
+          <mxGeometry height="240" width="160" x="360" y="120" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

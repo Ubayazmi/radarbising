@@ -1,0 +1,9 @@
+database.sqlite
+sessions/
+*.log
+*.bak
+*.drawio.bkp
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RADAR BISING — Musik & Pop Culture Indonesia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#e63946',
+                            dark: '#0a0a0a',
+                            light: '#fdfbf7',
+                        }
+                    },
+                    fontFamily: {
+                        // Sans-serif satu keluarga, beratnya disesuaikan per tempat:
+                        // - sans  : body teks (400)
+                        // - serif : heading besar (700) — tetap sans, beda bobot
+                        // - mono  : label/kapital kecil (600, tracking lebar)
+                        sans: ['Arial', 'Helvetica Neue', 'Helvetica', 'sans-serif'],
+                        serif: ['Arial', 'Helvetica Neue', 'Helvetica', 'sans-serif'],
+                        mono: ['Arial', 'Helvetica Neue', 'Helvetica', 'sans-serif'],
+                    },
+                    letterSpacing: {
+                        tight: '-0.025em',
+                        wide: '0.05em',
+                        widest: '0.12em',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Satu keluarga sans-serif; bobot & tracking disesuaikan per pemakaian */
+        body { font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-weight: 400; letter-spacing: 0; line-height: 1.6; }
+        /* Heading: sans bold + tracking ketat agar tegas */
+        h1, h2, h3, h4, .font-serif { font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-weight: 700; letter-spacing: -0.025em; }
+        h1 { font-size: clamp(2.2rem, 5vw, 3.2rem); line-height: 1.1; }
+        /* Label kecil kapital (mono): semibold + tracking lebar, tetap sans */
+        .font-mono { font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-weight: 600; letter-spacing: 0.05em; }
+        .font-mono.uppercase, .font-mono.tracking-widest { letter-spacing: 0.12em; }
+        /* Link & tombol */
+        a { font-weight: 500; }
+        /* Kartu konten */
+        .rounded { border-radius: 0.75rem; }
+        .rounded-full { border-radius: 9999px; }
+        /* Body artikel lebih lega dibaca */
+        .prose p { font-size: 1.125rem; line-height: 1.75; font-weight: 400; }
+        .font-mono.border { border-radius: 9999px; padding: 0.35rem 1rem; }
+
+        /* --- Colorful gradients --- */
+        .gradient-accent { background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899); }
+        .gradient-text { background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .gradient-accent-alt { background: linear-gradient(135deg, #f97316, #f43f5e, #ec4899); }
+        /* Glassmorphism card glow */
+        .card-glow { transition: box-shadow 0.3s; }
+        .card-glow:hover { box-shadow: 0 0 0 1px rgba(168,85,247,0.3), 0 8px 32px rgba(168,85,247,0.12); }
+        /* Animated ticker gradient */
+        .ticker-gradient { background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899, #f97316); background-size: 300% 100%; animation: tickerShimmer 6s linear infinite; }
+        @keyframes tickerShimmer { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
+        /* Nav active underline gradient */
+        .nav-active { background: linear-gradient(to top, #a855f7, #6366f1); background-clip: text; -webkit-background-clip: text; color: transparent; position: relative; }
+        .nav-active::after { content: ''; position: absolute; bottom: -3px; left: 0; right: 0; height: 2px; border-radius: 1px; background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899); }
+        /* Section border gradient */
+        .section-border { border-left: 4px solid transparent; border-image: linear-gradient(to bottom, #6366f1, #a855f7, #ec4899) 1; }
+        .gradient-btn-hover { background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899); }
+        /* Search input focus glow */
+        input[type=text]:focus { box-shadow: 0 0 0 3px rgba(168,85,247,0.15); }
+    </style>
+    <script>
+        // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+        if (localStorage.theme === 'light' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+            document.documentElement.classList.remove('dark');
+        } else {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-white to-fuchsia-50 dark:from-[#0e0e1c] dark:via-[#0b0b14] dark:to-[#180d20] text-neutral-900 dark:text-neutral-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300">
+    
+    <!-- TOP BAR / TICKER -->
+    <div class="ticker-gradient text-white text-xs font-mono py-2 px-6">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <span class="w-2 h-2 bg-white rounded-full animate-ping"></span>
+                <span class="tracking-widest uppercase font-semibold">UPDATE DUNIA MUSIK INDONESIA</span>
+            </div>
+            <div class="hidden sm:block text-neutral-400">
+                Thursday, 12 November 2026            </div>
+        </div>
+    </div>
+
+    <!-- HEADER / NAVBAR -->
+    <header class="border-b border-neutral-200 dark:border-neutral-800 sticky top-0 bg-white/80 dark:bg-[#0e0e1c]/80 backdrop-blur-md z-50">
+        <div class="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+            <a href="index.php?page=home" class="group block">
+                <!-- Logo asli (hitam) untuk mode Light; logo putih untuk mode Dark. Aspek rasio dijaga (w-auto), tidak di-stretch -->
+                <img src="assets/logo.png" alt="RADAR BISING" class="h-14 w-auto dark:hidden group-hover:opacity-75 transition-opacity">
+                <img src="assets/logo-white.png" alt="RADAR BISING" class="h-14 w-auto hidden dark:block group-hover:opacity-75 transition-opacity">
+            </a>
+
+            <nav class="hidden md:flex items-center space-x-8 text-sm font-mono tracking-wider">
+                <a href="index.php?page=home" class="nav-active font-bold pb-1">HOME</a>
+                <a href="index.php?page=articles" class="hover:text-fuchsia-500 transition-colors">ARTIKEL</a>
+                <a href="index.php?page=videos" class="hover:text-fuchsia-500 transition-colors">VIDEO</a>
+                <a href="index.php?page=exclusive" class="hover:text-fuchsia-500 transition-colors">EXCLUSIVE INTERVIEW</a>
+            </nav>
+
+            <div class="flex items-center space-x-4">
+                <!-- Search Form -->
+                <form action="index.php" method="GET" class="hidden sm:flex relative items-center">
+                    <input type="hidden" name="page" value="articles">
+                    <input type="text" name="q" value="" placeholder="Cari..." class="bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-800 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-fuchsia-500 w-36 transition-all">
+                    <button type="submit" class="absolute right-2.5 text-neutral-500 hover:text-fuchsia-500">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </button>
+                </form>
+
+                <!-- Theme Toggle Button -->
+                <button id="themeToggle" class="p-2.5 rounded-full border border-neutral-300 dark:border-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-900 transition-colors" title="Ubah Tema">
+                    <!-- Sun Icon (shown in dark mode) -->
+                    <svg id="sunIcon" class="w-4 h-4 hidden dark:block text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <!-- Moon Icon (shown in light mode) -->
+                    <svg id="moonIcon" class="w-4 h-4 block dark:hidden text-neutral-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.theme = 'light';
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.theme = 'dark';
+            }
+        });
+    </script>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow max-w-7xl mx-auto px-6 py-12 w-full space-y-16">
+
+                    
+            <!-- 1. HEADLINE ARTICLE (POP HARI INI HERO STYLE) -->
+            <section class="border-b border-neutral-200 dark:border-neutral-800 pb-12">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    <a href="index.php?page=article_detail&slug=eksperimen-sonic-di-bawah-tanah-jakarta" class="lg:col-span-7 aspect-[16/10] overflow-hidden rounded bg-neutral-200 dark:bg-neutral-900 group block">
+                        <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Eksperimen Sonic di Bawah Tanah Jakarta: Kebangkitan Noise &amp; Lo-Fi" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                    </a>
+                    <div class="lg:col-span-5 flex flex-col justify-center space-y-4">
+                        <div class="flex items-center space-x-3 text-xs font-mono uppercase">
+                            <span class="gradient-accent text-white px-2.5 py-0.5 font-bold tracking-wider">Kabar</span>
+                            <span class="text-neutral-500">2026-11-09</span>
+                        </div>
+                        <h1 class="text-3xl sm:text-4xl font-serif font-bold leading-tight hover:text-fuchsia-500 transition-colors">
+                            <a href="index.php?page=article_detail&slug=eksperimen-sonic-di-bawah-tanah-jakarta">
+                                Eksperimen Sonic di Bawah Tanah Jakarta: Kebangkitan Noise &amp; Lo-Fi                            </a>
+                        </h1>
+                        <p class="text-neutral-600 dark:text-neutral-400 text-sm sm:text-base leading-relaxed">
+                            Menelusuri gelombang baru produser lo-fi dan noise pop yang merajai skena independen ibu kota.                        </p>
+                        <div class="pt-4 flex items-center justify-between text-xs font-mono border-t border-neutral-200 dark:border-neutral-800">
+                            <span class="text-neutral-500">Oleh <strong class="text-neutral-900 dark:text-neutral-100">Rizky Maulana</strong></span>
+                            <a href="index.php?page=article_detail&slug=eksperimen-sonic-di-bawah-tanah-jakarta" class="text-fuchsia-600 font-bold hover:underline tracking-wider">BACA ARTIKEL →</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. SECONDARY ARTICLES (ARTIKEL 1 & ARTIKEL 2) -->
+            <section>
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-xl font-mono uppercase tracking-widest font-bold section-border pl-3">ARTIKEL TERBARU</h2>
+                    <a href="index.php?page=articles" class="text-xs font-mono tracking-wider hover:text-fuchsia-500 uppercase">LIHAT SEMUA →</a>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <a href="index.php?page=article_detail&slug=anatomi-melodi-minimalis" class="border border-neutral-200 dark:border-neutral-800 rounded p-6 flex flex-col justify-between bg-white/80 dark:bg-white/5 backdrop-blur-sm hover:border-fuchsia-400 transition-all group card-glow block">
+                            <div>
+                                <div class="flex items-center justify-between text-xs text-neutral-500 mb-4">
+                                    <span class="uppercase tracking-wider font-bold text-fuchsia-600">Resensi</span>
+                                    <span>2026-11-08</span>
+                                </div>
+                                <div class="aspect-video overflow-hidden rounded mb-4 bg-neutral-200 dark:bg-neutral-900">
+                                    <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Anatomi Melodi Minimalis: Mengapa Kesunyian Adalah Nada Baru" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                </div>
+                                <h3 class="text-xl font-serif font-bold mb-3 group-hover:text-fuchsia-500 transition-colors">
+                                    Anatomi Melodi Minimalis: Mengapa Kesunyian Adalah Nada Baru                                </h3>
+                                <p class="text-neutral-600 dark:text-neutral-400 text-sm line-clamp-2 mb-6">
+                                    Bedah estetik di balik aransemen sunyi yang mendominasi rilisan ambient pop mutakhir.                                </p>
+                            </div>
+                            <div class="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-xs text-neutral-500">
+                                <span>Nadia Kirana</span>
+                                <span class="text-fuchsia-600 font-bold group-hover:translate-x-1 transition-transform">BACA →</span>
+                            </div>
+                        </a>
+                                            <a href="index.php?page=article_detail&slug=revival-post-punk-dan-kegelisahan-digital" class="border border-neutral-200 dark:border-neutral-800 rounded p-6 flex flex-col justify-between bg-white/80 dark:bg-white/5 backdrop-blur-sm hover:border-fuchsia-400 transition-all group card-glow block">
+                            <div>
+                                <div class="flex items-center justify-between text-xs text-neutral-500 mb-4">
+                                    <span class="uppercase tracking-wider font-bold text-fuchsia-600">Wawancara</span>
+                                    <span>2026-11-07</span>
+                                </div>
+                                <div class="aspect-video overflow-hidden rounded mb-4 bg-neutral-200 dark:bg-neutral-900">
+                                    <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Revival Post-Punk dan Kegelisahan Digital Generasi Z" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                </div>
+                                <h3 class="text-xl font-serif font-bold mb-3 group-hover:text-fuchsia-500 transition-colors">
+                                    Revival Post-Punk dan Kegelisahan Digital Generasi Z                                </h3>
+                                <p class="text-neutral-600 dark:text-neutral-400 text-sm line-clamp-2 mb-6">
+                                    Bassline repetitif dan vokal spoken-word menjadi katarsis kemarahan kolektif era algoritma.                                </p>
+                            </div>
+                            <div class="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-xs text-neutral-500">
+                                <span>Bara Pratama</span>
+                                <span class="text-fuchsia-600 font-bold group-hover:translate-x-1 transition-transform">BACA →</span>
+                            </div>
+                        </a>
+                                    </div>
+                <!-- Show More Articles -->
+                <div class="mt-10 text-center">
+                    <a href="index.php?page=articles" class="inline-flex items-center space-x-2 text-xs font-mono uppercase tracking-widest px-8 py-3.5 border border-neutral-300 dark:border-neutral-700 rounded hover:gradient-accent-alt hover:text-white hover:border-fuchsia-400 transition-all">
+                        <span>SHOW MORE ARTIKEL</span>
+                        <span>→</span>
+                    </a>
+                </div>
+            </section>
+
+            <!-- 3. HEADLINE VIDEO -->
+            <section class="border-t border-neutral-200 dark:border-neutral-800 pt-16">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-xl font-mono uppercase tracking-widest font-bold section-border pl-3">VIDEO PILIHAN</h2>
+                    <a href="index.php?page=videos" class="text-xs font-mono tracking-wider hover:text-fuchsia-500 uppercase">LIHAT SEMUA →</a>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white/80 dark:bg-white/5 backdrop-blur-sm border border-neutral-200 dark:border-neutral-800 rounded p-6">
+                    <div class="lg:col-span-8 aspect-video bg-black rounded overflow-hidden">
+                        <iframe class="w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Live Session: Eksplorasi Sintesis Analog Bersama Kelompok Skena" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                    <div class="lg:col-span-4 flex flex-col justify-between space-y-4">
+                        <div>
+                            <a href="index.php?page=video_detail&slug=live-session-eksplorasi-sintesis-analog" class="group block">
+                                <span class="gradient-accent text-white text-xs font-mono uppercase px-2.5 py-0.5 font-bold tracking-wider">Kabar</span>
+                                <h3 class="text-2xl font-serif font-bold mt-3 mb-3 group-hover:text-fuchsia-500 transition-colors">Live Session: Eksplorasi Sintesis Analog Bersama Kelompok Skena</h3>
+                            </a>
+                            <p class="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">Penampilan live eksklusif dan wawancara singkat mengenai proses kreasi musik elektronik eksperimental.</p>
+                        </div>
+                        <div class="text-xs font-mono text-neutral-500 pt-4 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
+                            <span>Dipublikasikan: 2026-11-09</span>
+                            <a href="index.php?page=video_detail&slug=live-session-eksplorasi-sintesis-analog" class="text-fuchsia-600 font-bold hover:underline">PUTAR →</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. SECONDARY VIDEOS (VIDEO 1 & VIDEO 2) -->
+            <section>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <a href="index.php?page=video_detail&slug=behind-the-board-studio-album-noise-pop" class="border border-neutral-200 dark:border-neutral-800 rounded p-6 flex flex-col justify-between bg-white/80 dark:bg-white/5 backdrop-blur-sm hover:border-fuchsia-400 transition-all group card-glow block">
+                            <div>
+                                <div class="flex items-center justify-between text-xs text-neutral-500 mb-4">
+                                    <span class="uppercase tracking-wider font-bold text-fuchsia-600">Wawancara</span>
+                                    <span>2026-11-08</span>
+                                </div>
+                                <div class="aspect-video overflow-hidden rounded mb-4 bg-black relative">
+                                    <img src="https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Behind The Board: Proses Studio Album Terbaru Band Noise Pop" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <div class="w-12 h-12 gradient-accent text-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                            <svg class="w-5 h-5 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <h4 class="text-lg font-serif font-bold mb-2 group-hover:text-fuchsia-500 transition-colors">Behind The Board: Proses Studio Album Terbaru Band Noise Pop</h4>
+                                <p class="text-neutral-600 dark:text-neutral-400 text-xs line-clamp-2">Mengintip dapur rekaman dan teknik mixing unik yang digunakan dalam pembuatan album terbaru.</p>
+                            </div>
+                            <div class="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-xs text-neutral-500">
+                                <span>Audio Visual</span>
+                                <span class="text-fuchsia-600 font-bold">PUTAR VIDEO →</span>
+                            </div>
+                        </a>
+                                            <a href="index.php?page=video_detail&slug=dokumenter-pendek-sejarah-skena-diy-punk" class="border border-neutral-200 dark:border-neutral-800 rounded p-6 flex flex-col justify-between bg-white/80 dark:bg-white/5 backdrop-blur-sm hover:border-fuchsia-400 transition-all group card-glow block">
+                            <div>
+                                <div class="flex items-center justify-between text-xs text-neutral-500 mb-4">
+                                    <span class="uppercase tracking-wider font-bold text-fuchsia-600">Agenda</span>
+                                    <span>2026-11-06</span>
+                                </div>
+                                <div class="aspect-video overflow-hidden rounded mb-4 bg-black relative">
+                                    <img src="https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Dokumenter Pendek: Sejarah Skena DIY Punk Ibu Kota" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <div class="w-12 h-12 gradient-accent text-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                            <svg class="w-5 h-5 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <h4 class="text-lg font-serif font-bold mb-2 group-hover:text-fuchsia-500 transition-colors">Dokumenter Pendek: Sejarah Skena DIY Punk Ibu Kota</h4>
+                                <p class="text-neutral-600 dark:text-neutral-400 text-xs line-clamp-2">Perjalanan panjang kolektif independen dalam membangun ruang mandiri bagi musisi underground.</p>
+                            </div>
+                            <div class="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-xs text-neutral-500">
+                                <span>Audio Visual</span>
+                                <span class="text-fuchsia-600 font-bold">PUTAR VIDEO →</span>
+                            </div>
+                        </a>
+                                    </div>
+                <!-- Show More Videos -->
+                <div class="mt-10 text-center">
+                    <a href="index.php?page=videos" class="inline-flex items-center space-x-2 text-xs font-mono uppercase tracking-widest px-8 py-3.5 border border-neutral-300 dark:border-neutral-700 rounded hover:gradient-accent-alt hover:text-white hover:border-fuchsia-400 transition-all">
+                        <span>SHOW MORE VIDEO</span>
+                        <span>→</span>
+                    </a>
+                </div>
+            </section>
+
+        
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-neutral-200 dark:border-neutral-800 bg-gradient-to-t from-white via-indigo-50/40 to-white dark:from-[#0e0e1c] dark:via-[#131328] dark:to-[#0e0e1c] py-16 mt-20">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-10 text-sm">
+            <div class="space-y-4">
+                <h4 class="font-serif font-bold text-xl tracking-wider uppercase">RADAR BISING</h4>
+                <p class="text-neutral-500 text-xs leading-relaxed">
+                    Media digital independen yang merekam, meresensi, dan merayakan dinamika skena musik serta kultur pop Indonesia terkini.
+                </p>
+            </div>
+            <div class="space-y-4">
+                <h4 class="font-mono font-bold text-xs tracking-widest uppercase text-neutral-400">JELAJAH</h4>
+                <ul class="space-y-2 text-xs font-mono text-neutral-600 dark:text-neutral-400">
+                    <li><a href="index.php?page=articles" class="hover:text-fuchsia-500 transition-colors">Semua Artikel</a></li>
+                    <li><a href="index.php?page=videos" class="hover:text-fuchsia-500 transition-colors">Semua Video</a></li>
+                    <li><a href="index.php?page=exclusive" class="hover:text-fuchsia-500 transition-colors">Exclusive Interview</a></li>
+                </ul>
+            </div>
+            <div class="space-y-4">
+                <h4 class="font-mono font-bold text-xs tracking-widest uppercase text-neutral-400">KATEGORI</h4>
+                <ul class="space-y-2 text-xs font-mono text-neutral-600 dark:text-neutral-400">
+                    <li><a href="index.php?page=articles&cat=Resensi" class="hover:text-fuchsia-500 transition-colors">Resensi</a></li>
+                    <li><a href="index.php?page=articles&cat=Wawancara" class="hover:text-fuchsia-500 transition-colors">Wawancara</a></li>
+                    <li><a href="index.php?page=articles&cat=Agenda" class="hover:text-fuchsia-500 transition-colors">Agenda</a></li>
+                </ul>
+            </div>
+            <div class="space-y-4">
+                <h4 class="font-mono font-bold text-xs tracking-widest uppercase text-neutral-400">REDAKSI</h4>
+                <ul class="space-y-2 text-xs font-mono text-neutral-600 dark:text-neutral-400">
+                    <li><a href="#" class="hover:text-fuchsia-500 transition-colors">Tentang Kami</a></li>
+                    <li><a href="#" class="hover:text-fuchsia-500 transition-colors">Kontak & Kirim Rilisan</a></li>
+                    <li><a href="#" class="hover:text-fuchsia-500 transition-colors">Iklan & Kerja Sama</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-6 mt-12 pt-6 border-t border-neutral-100 dark:border-neutral-900 flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-neutral-500">
+            <div>© 2026 RADAR BISING. HAK CIPTA DILINDUNGI.</div>
+            <div class="flex space-x-4 mt-2 sm:mt-0">
+                <span>JAKARTA, INDONESIA</span>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
