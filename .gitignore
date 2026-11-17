@@ -14,3 +14,7 @@ node_modules/
 vendor/
 *.zip
 *.tgz
+.env
+.env.local
+.env.*.local
+composer.phar
