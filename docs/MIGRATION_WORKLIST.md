@@ -36,10 +36,13 @@
 - [x] `composer install --no-dev --optimize-autoloader` → `vendor/` ready
 - [x] `.env.example` template dengan semua variabel yang dibutuhkan
 
-### 02.4 Pre-Migration Checklist (Butuh Credentials → Vercel Env)
-- [ ] **Supabase Project** dibuat (atau existing)
-- [ ] **Run `supabase/schema.sql`** di Supabase SQL Editor
-- [ ] **Storage bucket** `radarbising-uploads` dibuat (public atau signed URL)
+### 02.4 Pre-Migration Checklist (Automation via GitHub Actions)
+- [x] **GitHub Actions workflow** `.github/workflows/migrate.yml` — download SQLite dari bucket private `migration-source`, terapkan `supabase/schema.sql` (psql, idempoten), jalankan `migrate.php` (dry-run/live), verifikasi row counts, buat bucket `radarbising-uploads` via API, hapus SQLite dari runner (commit `78e8285`, fix `309899e`)
+- [x] **Panduan setup** `SECRETS_SETUP.md` + `README_MIGRATION.md` (committed)
+- [ ] **Supabase Project** tersedia (diklaim siap oleh user — akan terverifikasi saat dry run)
+- [ ] **6 GitHub Secrets** di-set (lihat `SECRETS_SETUP.md`): `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `DB_DSN`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
+- [ ] **Bucket private `migration-source`** dibuat di Supabase Storage + `database.sqlite` di-upload ke dalamnya
+- [ ] **Jalankan workflow** di GitHub Actions → **Supabase Migration → Run workflow** (centang **Dry run** dulu untuk validasi, lalu live). Workflow otomatis menjalankan: terapkan schema → migrasi → verifikasi → buat bucket `radarbising-uploads`
 - [ ] **Environment Variables** diset di **Vercel Dashboard** (Project Settings → Environment Variables):
   | Variable | Description | Source |
   |----------|-------------|--------|
@@ -52,15 +55,16 @@
   | `SUPABASE_STORAGE_BUCKET` | `radarbising-uploads` | Fixed |
   | `APP_ENV` | `production` | Fixed |
   | `APP_DEBUG` | `false` | Fixed |
-- [ ] **Local `.env`** untuk development (copy `.env.example` → `.env`, isi credentials lokal)
-- [ ] **Backup SQLite**: `cp database.sqlite database.sqlite.bak`
-- [ ] **Jalankan migrasi**: `php migrate.php` (pastikan `pdo_pgsql` extension aktif di PHP lokal)
-- [ ] **Verifikasi**: Bandingkan `SELECT COUNT(*)` per tabel SQLite vs PostgreSQL
+- [ ] **Jalankan workflow** di GitHub Actions → **Supabase Migration → Run workflow** (centang **Dry run** dulu untuk validasi, lalu live). Workflow otomatis menjalankan: terapkan schema → migrasi → verifikasi → buat bucket `radarbising-uploads`
+- [ ] **Run `supabase/schema.sql`** — ditangani otomatis oleh workflow saat migrasi berjalan
+- [ ] **Storage bucket `radarbising-uploads`** — ditangani otomatis oleh workflow saat migrasi berjalan
+- [ ] **Verifikasi**: Bandingkan `SELECT COUNT(*)` per tabel SQLite vs PostgreSQL — diverifikasi otomatis oleh workflow (step "Verify Migration Result", gagal jika mismatch)
 
 ### 02.5 Post-Migration Verification
-- [ ] Login test: Admin, Editor, Writer (via Supabase DB users)
-- [ ] Cek data: articles, videos, users, login_logs, settings row counts match
-- [ ] Cek sequence values: `SELECT last_value FROM <table>_id_seq`
+- [ ] **Cek data row counts** — diverifikasi otomatis oleh workflow (step "Verify Migration Result", gagal jika mismatch)
+- [ ] **Tabel `sessions` tetap kosong** — diverifikasi otomatis oleh workflow (harus 0 sebelum Plan 03)
+- [ ] **Cek sequence values**: `SELECT last_value FROM <table>_id_seq` (manual setelah live run)
+- [ ] **Login test**: Admin, Editor, Writer (via Supabase DB users)
 
 ---
 
@@ -285,9 +289,9 @@
 | Plan | Status | Target Selesai | Catatan |
 |------|--------|----------------|---------|
 | 01 Audit | ✅ Done | 2026-11-17 | `docs/AUDIT_REPORT.md`, `docs/MIGRATION_WORKLIST.md` |
-| 02 DB Migration | 🟡 **Prepared** | | Schema, script, deps ready — waiting for Supabase credentials (via Vercel Env) |
+| 02 DB Migration | 🟡 **Automation Siap** | | Schema, script, deps, GitHub Actions ready — tinggal set 6 GitHub Secrets + upload SQLite ke bucket `migration-source` + Run workflow |
 | 03 Code Adapt | ⬜ Pending | | Depends on 02 completion |
-| 04 Vercel Config | ⬜ Pending | | Parallel dengan 03 |
+| 04 Vercel Config | ⬜ Pending (deploy workflow ✅) | | Workflow `.github/workflows/deploy.yml` sudah committed; `vercel.json`/Dockerfile belum |
 | 05 Testing/Go-Live | ⬜ Pending | | After 03+04 |
 
 ---
