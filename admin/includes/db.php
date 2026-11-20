@@ -1,15 +1,12 @@
 <?php
 /**
  * Database connection - shared PDO instance
+ * Uses Database abstraction (SQLite local / PostgreSQL production)
  */
-$adminDbPath = __DIR__ . '/../../database.sqlite';
+require_once __DIR__ . '/../../includes/Database.php';
 
 try {
-    $pdo = new PDO('sqlite:' . $adminDbPath, null, null, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-    ]);
+    $pdo = Database::getConnection();
 } catch (PDOException $e) {
     die('Database connection failed: ' . $e->getMessage());
 }

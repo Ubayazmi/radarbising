@@ -1,0 +1,27 @@
+# Vercel ignore file - files not to deploy
+.git
+.github
+node_modules
+vendor
+assets/
+sessions/
+database.sqlite*
+database.sqlite-*
+admin/uploads/
+writer/includes/sessions/
+*.log
+*.bak
+*.drawio*
+.env
+.env.local
+.env.*.local
+composer.phar
+dump_schema*.php
+migrate.php
+docs/
+README_MIGRATION.md
+SECRETS_SETUP.md
+Layout*
+*.md
+!vercel.json
+!.vercelignore
