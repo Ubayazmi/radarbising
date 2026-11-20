@@ -9,7 +9,8 @@ sessions/
 Thumbs.db
 assets/
 admin/uploads/
-writer/
+writer/uploads/
+writer/includes/sessions/
 node_modules/
 vendor/
 *.zip

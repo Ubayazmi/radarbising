@@ -1,39 +1,19 @@
 {
   "buildCommand": "composer install --no-dev --optimize-autoloader",
-  "devCommand": "php -S localhost:8000 -t .",
-  "installCommand": "composer install",
+  "installCommand": "echo 'Dependencies installed during build'",
   "framework": null,
   "functions": {
-    "index.php": { "maxDuration": 30 },
-    "health.php": { "maxDuration": 10 },
-    "admin/**/*.php": { "maxDuration": 30 },
-    "writer/**/*.php": { "maxDuration": 30 }
+    "api/index.php": { "maxDuration": 30, "runtime": "vercel-php@0.9.0" },
+    "api/health.php": { "maxDuration": 10, "runtime": "vercel-php@0.9.0" }
   },
   "routes": [
-    {
-      "src": "/assets/(.*)",
-      "headers": { "cache-control": "public, max-age=31536000, immutable" },
-      "dest": "/assets/$1"
-    },
-    {
-      "src": "/health.php",
-      "dest": "/health.php"
-    },
-    {
-      "src": "/admin/(.*)",
-      "dest": "/admin/$1"
-    },
-    {
-      "src": "/writer/(.*)",
-      "dest": "/writer/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.php"
-    }
+    { "src": "/assets/(.*)", "headers": { "cache-control": "public, max-age=31536000, immutable" }, "dest": "/assets/$1" },
+    { "src": "/admin/assets/(.*)", "headers": { "cache-control": "public, max-age=31536000, immutable" }, "dest": "/admin/assets/$1" },
+    { "src": "/writer/assets/(.*)", "headers": { "cache-control": "public, max-age=31536000, immutable" }, "dest": "/writer/assets/$1" },
+    { "src": "/favicon.ico", "dest": "/favicon.ico" },
+    { "src": "/favicon.png", "dest": "/favicon.png" },
+    { "src": "/health.php", "dest": "/api/health.php" },
+    { "src": "/(.*)", "dest": "/api/index.php" }
   ],
-  "env": {
-    "APP_ENV": "production",
-    "APP_DEBUG": "false"
-  }
+  "env": { "APP_ENV": "production", "APP_DEBUG": "false" }
 }

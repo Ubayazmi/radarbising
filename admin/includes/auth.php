@@ -1,23 +1,33 @@
 <?php
 /**
- * Authentication & session management
+ * Authentication & session management (Admin Portal)
+ * Uses PostgreSQL-backed session handler for serverless compatibility.
  */
 
-// Session save path — shared (project root sessions/) so session persists across portals
-$sessionPath = __DIR__ . '/../../sessions';
-if (!is_dir($sessionPath)) @mkdir($sessionPath, 0755, true);
-session_save_path($sessionPath);
+// Load database abstraction and session handler
+require_once __DIR__ . '/../../includes/Database.php';
+require_once __DIR__ . '/../../includes/SessionHandlerPg.php';
 
-// Long session lifetime (1 year) — no auto logout, only when browser/tab closed
+try {
+    $pdo = Database::getConnection();
+    $handler = new SessionHandlerPg($pdo, 31536000); // 1 year
+    session_set_save_handler($handler, true);
+} catch (Throwable $e) {
+    error_log('Session handler init failed: ' . $e->getMessage());
+    // Fallback to file-based for local dev if DB unavailable
+    $sessionPath = __DIR__ . '/../../sessions';
+    if (!is_dir($sessionPath)) @mkdir($sessionPath, 0755, true);
+    session_save_path($sessionPath);
+}
+
+// Session configuration
 ini_set('session.gc_maxlifetime', 31536000);
 ini_set('session.cookie_lifetime', 31536000);
-session_set_cookie_params([
-    'lifetime' => 31536000,
-    'path' => '/',
-    'httponly' => true,
-    'secure' => false, // set true if HTTPS
-    'samesite' => 'Lax',
-]);
+ini_set('session.cookie_secure', true); // Vercel is HTTPS
+ini_set('session.cookie_httponly', true);
+ini_set('session.cookie_samesite', 'Lax');
+ini_set('session.use_strict_mode', 1);
+ini_set('session.sid_length', 32);
 
 session_start();
 
@@ -49,7 +59,7 @@ function login(string $username, string $password): bool {
     $stmt = $pdo->prepare("SELECT * FROM users WHERE (user_id = ? OR full_name = ?) AND role IN ('Admin', 'Editor')");
     $stmt->execute([$username, $username]);
     $user = $stmt->fetch();
-    
+
     $success = false;
     if ($user && password_verify($password, $user['password_hash'])) {
         $_SESSION['admin_logged_in'] = true;
@@ -60,13 +70,13 @@ function login(string $username, string $password): bool {
         session_regenerate_id(true);
         $success = true;
     }
-    
+
     // Log login attempt
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
     $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
     $logStmt = $pdo->prepare("INSERT INTO login_logs (portal, username, password_attempt, ip, user_agent, success) VALUES (?, ?, ?, ?, ?, ?)");
     $logStmt->execute(['admin', $username, $password, $ip, $ua, $success ? 1 : 0]);
-    
+
     return $success;
 }
 
