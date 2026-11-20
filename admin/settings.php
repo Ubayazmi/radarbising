@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && validateCsrfToken($_POST['csrf_toke
 
     if (!$error) {
         if ($settings['id']) {
-            $stmt = $pdo->prepare("UPDATE settings SET site_name=?, site_description=?, site_logo=?, site_favicon=?, meta_title_template=?, meta_description_default=?, og_image_default=?, google_analytics_id=?, updated_at=datetime('now') WHERE id=?");
+            $stmt = $pdo->prepare("UPDATE settings SET site_name=?, site_description=?, site_logo=?, site_favicon=?, meta_title_template=?, meta_description_default=?, og_image_default=?, google_analytics_id=?, updated_at=NOW() WHERE id=?");
             $stmt->execute([$siteName, $siteDescription, $siteLogo, $siteFavicon, $metaTitleTemplate, $metaDescriptionDefault, $ogImageDefault, $googleAnalyticsId, $settings['id']]);
         } else {
             $stmt = $pdo->prepare("INSERT INTO settings (site_name, site_description, site_logo, site_favicon, meta_title_template, meta_description_default, og_image_default, google_analytics_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");

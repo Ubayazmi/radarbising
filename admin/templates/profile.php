@@ -33,7 +33,7 @@
                     <div class="flex flex-col h-full">
                       <div class="p-6 border-b border-neutral-200">
                         <a href="dashboard.php" class="flex items-center gap-3">
-                          <img src="/radarbising/assets/logo.png" alt="Radar Bising" class="h-10 w-auto" loading="lazy">
+                          <img src="/assets/logo.png" alt="Radar Bising" class="h-10 w-auto" loading="lazy">
                         </a>
                       </div>
                       <nav class="flex-1 p-4 space-y-1 overflow-y-auto">

@@ -1,9 +1,11 @@
 {
-  "buildCommand": "composer install --no-dev --optimize-autoloader",
-  "installCommand": "echo 'Dependencies installed during build'",
+  "buildCommand": "php composer.phar install --no-dev --optimize-autoloader",
+  "installCommand": "echo 'Dependencies installed via composer.phar'",
   "framework": null,
   "functions": {
     "api/index.php": { "maxDuration": 30, "runtime": "vercel-php@0.9.0" },
+    "api/admin.php": { "maxDuration": 30, "runtime": "vercel-php@0.9.0" },
+    "api/writer.php": { "maxDuration": 30, "runtime": "vercel-php@0.9.0" },
     "api/health.php": { "maxDuration": 10, "runtime": "vercel-php@0.9.0" }
   },
   "routes": [
@@ -13,6 +15,8 @@
     { "src": "/favicon.ico", "dest": "/favicon.ico" },
     { "src": "/favicon.png", "dest": "/favicon.png" },
     { "src": "/health.php", "dest": "/api/health.php" },
+    { "src": "/admin/(.*)", "dest": "/api/admin.php" },
+    { "src": "/writer/(.*)", "dest": "/api/writer.php" },
     { "src": "/(.*)", "dest": "/api/index.php" }
   ],
   "env": { "APP_ENV": "production", "APP_DEBUG": "false" }

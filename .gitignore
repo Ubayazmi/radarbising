@@ -18,4 +18,3 @@ vendor/
 .env
 .env.local
 .env.*.local
-composer.phar

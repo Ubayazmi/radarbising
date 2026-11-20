@@ -148,8 +148,8 @@ if ($page === 'article_detail' && $slug) {
             <div class="flex items-center gap-4">
                                         <!-- Logo: switches between dark (white) and light (black) -->
                                         <a href="index.php" class="flex items-center gap-3" aria-label="Radar Bising - Home">
-                                            <span class="logo-wrapper" data-dark-src="/radarbising/assets/logo-white.png" data-light-src="/radarbising/assets/logo.png">
-                                                <img src="/radarbising/assets/logo.png" alt="<?= e($siteSettings['site_name']) ?>" class="h-10 w-auto logo-img" loading="lazy">
+                                            <span class="logo-wrapper" data-dark-src="assets/logo-white.png" data-light-src="assets/logo.png">
+                                                <img src="assets/logo.png" alt="<?= e($siteSettings['site_name']) ?>" class="h-10 w-auto logo-img" loading="lazy">
                                             </span>
                                         </a>
                                     </div>

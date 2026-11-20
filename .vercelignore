@@ -14,8 +14,7 @@ writer/includes/sessions/
 *.drawio*
 .env
 .env.local
-.env.*.local
-composer.phar
+*.env.*.local
 dump_schema*.php
 migrate.php
 docs/

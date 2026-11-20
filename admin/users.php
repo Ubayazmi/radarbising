@@ -22,7 +22,7 @@ if ($action === 'create') {
             $error = 'Nama lengkap wajib diisi.';
         } else {
             // Auto-generate user_id: 001, 002, ... (only numeric ones)
-            $last = $pdo->query("SELECT user_id FROM users WHERE user_id NOT LIKE '%[^0-9]%' ORDER BY CAST(user_id AS UNSIGNED) DESC LIMIT 1")->fetch();
+            $last = $pdo->query("SELECT user_id FROM users WHERE user_id NOT LIKE '%[^0-9]%' ORDER BY user_id::bigint DESC LIMIT 1")->fetch();
             $nextNum = $last ? ((int)$last['user_id']) + 1 : 1;
             $userId = sprintf('%03d', $nextNum);
             
@@ -32,7 +32,7 @@ if ($action === 'create') {
             }
             $hash = password_hash($password, PASSWORD_DEFAULT);
             
-            $stmt = $pdo->prepare("INSERT INTO users (user_id, full_name, role, password_hash, created_at) VALUES (?, ?, ?, ?, datetime('now'))");
+            $stmt = $pdo->prepare("INSERT INTO users (user_id, full_name, role, password_hash, created_at) VALUES (?, ?, ?, ?, NOW())");
             if ($stmt->execute([$userId, $fullName, $role, $hash])) {
                 $msg = "User berhasil dibuat. ID: $userId";
                 if (!$_POST['password']) {

@@ -69,7 +69,7 @@ $csrfToken = generateCsrfToken();
                 <!-- Logo -->
                 <div class="p-6 border-b border-neutral-200">
                     <a href="dashboard.php" class="flex items-center gap-3">
-                        <img src="/radarbising/assets/logo.png" alt="Radar Bising" class="h-10 w-auto" loading="lazy">
+                        <img src="/assets/logo.png" alt="Radar Bising" class="h-10 w-auto" loading="lazy">
                     </a>
                 </div>
 

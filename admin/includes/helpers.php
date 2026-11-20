@@ -3,6 +3,8 @@
  * Helper functions for admin panel
  */
 
+require_once __DIR__ . '/../../includes/StorageAdapter.php';
+
 /**
  * Generate URL-friendly slug from string
  */
@@ -32,64 +34,10 @@ function uniqueSlug(PDO $pdo, string $table, string $baseSlug, int $excludeId = 
 }
 
 /**
- * Upload image file, return relative path or false on failure
+ * Upload image — delegated to includes/StorageAdapter.php
+ * Returns Supabase Storage URL (production) or local path (dev)
+ * @deprecated use uploadImage() from includes/StorageAdapter.php
  */
-function uploadImage(array $file, string $targetDir = 'uploads'): string|false {
-    $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    $maxSize = 5 * 1024 * 1024; // 5MB
-
-    if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
-        return false;
-    }
-    if ($file['error'] !== UPLOAD_ERR_OK) {
-        return false;
-    }
-    if (!in_array($file['type'], $allowedTypes)) {
-        return false;
-    }
-    if ($file['size'] > $maxSize) {
-        return false;
-    }
-
-    // Verify it's actually an image
-    $info = getimagesize($file['tmp_name']);
-    if (!$info) {
-        return false;
-    }
-
-    $ext = match ($file['type']) {
-        'image/jpeg' => 'jpg',
-        'image/png' => 'png',
-        'image/webp' => 'webp',
-        'image/gif' => 'gif',
-        default => 'jpg',
-    };
-
-    $filename = bin2hex(random_bytes(8)) . '_' . time() . '.' . $ext;
-    $destDir = __DIR__ . '/../' . $targetDir;
-    if (!is_dir($destDir)) {
-        mkdir($destDir, 0755, true);
-    }
-    $destPath = $destDir . '/' . $filename;
-
-    if (!move_uploaded_file($file['tmp_name'], $destPath)) {
-        return false;
-    }
-
-    // Return relative path from project root
-    return 'admin/' . $targetDir . '/' . $filename;
-}
-
-/**
- * Delete image file if exists
- */
-function deleteImage(string $relativePath): bool {
-    $fullPath = __DIR__ . '/../../' . $relativePath;
-    if (file_exists($fullPath) && is_file($fullPath)) {
-        return unlink($fullPath);
-    }
-    return true;
-}
 
 /**
  * Sanitize HTML output
