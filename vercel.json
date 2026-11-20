@@ -5,7 +5,8 @@
     "api/admin.php": { "maxDuration": 30, "runtime": "vercel-php@0.9.0" },
     "api/writer.php": { "maxDuration": 30, "runtime": "vercel-php@0.9.0" },
     "api/health.php": { "maxDuration": 10, "runtime": "vercel-php@0.9.0" },
-    "api/diagnose.php": { "maxDuration": 10, "runtime": "vercel-php@0.9.0" }
+    "api/diagnose.php": { "maxDuration": 10, "runtime": "vercel-php@0.9.0" },
+    "api/phpinfo.php": { "maxDuration": 10, "runtime": "vercel-php@0.9.0" }
   },
   "routes": [
     { "src": "/assets/(.*)", "headers": { "cache-control": "public, max-age=31536000, immutable" }, "dest": "/assets/$1" },
@@ -15,6 +16,7 @@
     { "src": "/favicon.png", "dest": "/favicon.png" },
     { "src": "/health.php", "dest": "/api/health.php" },
     { "src": "/diagnose.php", "dest": "/api/diagnose.php" },
+    { "src": "/phpinfo.php", "dest": "/api/phpinfo.php" },
     { "src": "/admin/(.*)", "dest": "/api/admin.php" },
     { "src": "/writer/(.*)", "dest": "/api/writer.php" },
     { "src": "/(.*)", "dest": "/api/index.php" }
