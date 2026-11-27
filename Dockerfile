@@ -1,4 +1,6 @@
 # Use official FrankenPHP image
+FROM dunglas/frankenphp:1.4-php8.2-alpine
+
 # Build cache bust - change this value to force fresh build
 ARG CACHEBUST=4
 RUN echo "Cache bust: $CACHEBUST"
