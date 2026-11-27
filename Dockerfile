@@ -2,7 +2,7 @@
 FROM php:8.2-fpm-alpine
 
 # Build cache bust
-ARG CACHEBUST=7
+ARG CACHEBUST=8
 RUN echo "Cache bust: $CACHEBUST"
 
 # Install PHP extensions
@@ -24,8 +24,7 @@ RUN apk add --no-cache \
     zip \
     intl \
     bcmath \
-    opcache \
-    sockets
+    opcache
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
