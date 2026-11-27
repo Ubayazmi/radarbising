@@ -1,6 +1,11 @@
 # Use official FrankenPHP image
 FROM dunglas/frankenphp:1.4-php8.2-alpine
 
+# Install PHP extensions including PostgreSQL driver
+RUN install-php-extensions \
+    pdo_pgsql \
+    pgsql
+
 # Install system dependencies needed
 RUN apk add --no-cache \
     zip \
