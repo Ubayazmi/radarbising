@@ -2,11 +2,12 @@
 FROM php:8.2-fpm-alpine
 
 # Build cache bust
-ARG CACHEBUST=9
+ARG CACHEBUST=10
 RUN echo "Cache bust: $CACHEBUST"
 
-# Install PHP extensions
+# Install nginx and PHP extensions
 RUN apk add --no-cache \
+    nginx \
     postgresql-dev \
     libpq \
     oniguruma-dev \
