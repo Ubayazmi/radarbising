@@ -2,7 +2,7 @@
 FROM php:8.2-fpm-alpine
 
 # Build cache bust
-ARG CACHEBUST=11
+ARG CACHEBUST=12
 RUN echo "Cache bust: $CACHEBUST"
 
 # Install nginx and PHP extensions
@@ -18,7 +18,7 @@ RUN apk add --no-cache \
     libzip-dev
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
-RUN docker-php-ext-install pdo pdo_pgsql pgsql
+RUN docker-php-ext-install pdo_pgsql pgsql
 RUN docker-php-ext-install mbstring gd zip intl bcmath opcache
 
 # Install Composer

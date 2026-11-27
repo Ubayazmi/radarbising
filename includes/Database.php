@@ -54,6 +54,25 @@ class Database
         // 1. Full DSN string (preferred for Supabase Transaction Pooler)
         $dsn = getenv('DB_DSN') ?: $_ENV['DB_DSN'] ?? '';
 
+        // If DSN is a URL (postgresql:// or postgres://), parse and convert to PDO pgsql format
+        if ($dsn && (str_starts_with($dsn, 'postgresql://') || str_starts_with($dsn, 'postgres://'))) {
+            $parsed = parse_url($dsn);
+            if ($parsed) {
+                $host = $parsed['host'] ?? '';
+                $port = $parsed['port'] ?? '5432';
+                $user = $parsed['user'] ?? '';
+                $pass = $parsed['pass'] ?? '';
+                $dbname = ltrim($parsed['path'] ?? '', '/');
+                $query = $parsed['query'] ?? '';
+                parse_str($query, $queryParams);
+                $sslmode = $queryParams['sslmode'] ?? 'require';
+
+                $dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode={$sslmode}";
+                $username = $user;
+                $password = $pass;
+            }
+        }
+
         // Detect placeholder DSN (contains 'xxx' or 'your-project' or '***')
         $isPlaceholderDsn = $dsn && (str_contains($dsn, 'xxx') || str_contains($dsn, 'your-project') || str_contains($dsn, '***'));
 
@@ -105,11 +124,15 @@ class Database
             $options[PDO::ATTR_PERSISTENT] = true; // Reuse connections in serverless
         }
 
+        // Username/password: use parsed values from URL DSN if available, fallback to env vars
+        $username = $username ?? (getenv('DB_USERNAME') ?: $_ENV['DB_USERNAME'] ?? null);
+        $password = $password ?? (getenv('DB_PASSWORD') ?: $_ENV['DB_PASSWORD'] ?? null);
+
         self::$config = [
             'dsn'      => $dsn,
             'options'  => $options,
-            'username' => $isPostgres ? (getenv('DB_USERNAME') ?: $_ENV['DB_USERNAME'] ?? null) : null,
-            'password' => $isPostgres ? (getenv('DB_PASSWORD') ?: $_ENV['DB_PASSWORD'] ?? null) : null,
+            'username' => $isPostgres ? $username : null,
+            'password' => $isPostgres ? $password : null,
             'is_pg'    => $isPostgres,
         ];
 
