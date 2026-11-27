@@ -1,24 +1,64 @@
-# Vercel PHP Docker Runtime - Official
-# Uses vercel/php:8.2 image with full extension support
-FROM vercel/php:8.2
+# Vercel Container Runtime - PHP 8.2 with full extensions
+# Uses official PHP image with all required extensions pre-installed
+FROM php:8.2-fpm-alpine
 
-# Install additional extensions if needed (pdo_pgsql, pgsql already included)
-# RUN apt-get update && apt-get install -y libpq-dev && docker-php-ext-install pdo_pgsql pgsql
+# Install system dependencies and PHP extensions
+RUN apk add --no-cache \
+    postgresql-dev \
+    libpq \
+    libzip-dev \
+    zip \
+    unzip \
+    git \
+    curl \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    icu-dev \
+    oniguruma-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+    pdo_pgsql \
+    pgsql \
+    mbstring \
+    gd \
+    zip \
+    intl \
+    bcmath \
+    opcache \
+    sockets
 
-# Copy application files
-COPY . /var/task
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/task
 
-# Install Composer dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Copy composer files first for caching
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+
+# Copy application code
+COPY . .
 
 # Ensure storage directories exist
-RUN mkdir -p /var/task/sessions /var/task/admin/uploads /var/task/writer/uploads
+RUN mkdir -p /var/task/sessions /var/task/admin/uploads /var/task/writer/uploads \
+    && chmod -R 755 /var/task/sessions /var/task/admin/uploads /var/task/writer/uploads
 
-# Expose port (not used by Vercel but good practice)
+# PHP configuration for production
+RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "opcache.memory_consumption=128" >> /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "opcache.max_accelerated_files=4000" >> /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "session.cookie_secure=1" >> /usr/local/etc/php/conf.d/session.ini \
+    && echo "session.cookie_httponly=1" >> /usr/local/etc/php/conf.d/session.ini \
+    && echo "session.cookie_samesite=Lax" >> /usr/local/etc/php/conf.d/session.ini \
+    && echo "session.use_strict_mode=1" >> /usr/local/etc/php/conf.d/session.ini
+
+# Expose port (Vercel Container runtime uses PORT env var)
 EXPOSE 8080
 
-# Start PHP built-in server (Vercel handles routing)
-CMD ["php", "-S", "0.0.0.0:8080", "api/index.php"]
+# Start PHP built-in server on PORT from Vercel
+CMD php -S 0.0.0.0:${PORT:-8080} api/index.php

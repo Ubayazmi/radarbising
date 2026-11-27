@@ -1,7 +1,6 @@
 {
-  "buildCommand": "echo 'Container runtime - build in Dockerfile.vercel'",
-  "installCommand": "echo 'Container runtime - install in Dockerfile.vercel'",
   "framework": null,
+  "outputDirectory": "public",
   "routes": [
     { "src": "/assets/(.*)", "headers": { "cache-control": "public, max-age=31536000, immutable" }, "dest": "/assets/$1" },
     { "src": "/admin/assets/(.*)", "headers": { "cache-control": "public, max-age=31536000, immutable" }, "dest": "/admin/assets/$1" },
