@@ -2,7 +2,7 @@
 FROM php:8.2-fpm-alpine
 
 # Build cache bust
-ARG CACHEBUST=8
+ARG CACHEBUST=9
 RUN echo "Cache bust: $CACHEBUST"
 
 # Install PHP extensions
@@ -59,5 +59,9 @@ RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \
 # Expose port (Vercel sets PORT env var)
 EXPOSE 8080
 
+# Copy startup script
+COPY start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
 # Start PHP-FPM listening on PORT env var
-CMD ["sh", "-c", "php-fpm -y /usr/local/etc/php-fpm.conf -R"]
+CMD ["/usr/local/bin/start.sh"]
