@@ -1,5 +1,5 @@
 {
-  "framework": "docker",
+  "framework": "container",
   "buildCommand": "echo 'Using Dockerfile'",
   "devCommand": "docker run --rm -p 3000:8080 $(docker build -q .)",
   "installCommand": "echo 'Dependencies installed in Docker image'",
