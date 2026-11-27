@@ -31,11 +31,14 @@ jobs:
         with:
           version: latest
 
-      - name: Run migrations (dry-run)
-        if: github.event.inputs.dry_run == 'true'
+      - name: List migrations
         run: |
           supabase migration list --project-ref $SUPABASE_PROJECT_REF
-          supabase db diff --schema public --project-ref $SUPABASE_PROJECT_REF --dry-run
+
+      - name: Diff schema (dry-run preview)
+        if: github.event.inputs.dry_run == 'true'
+        run: |
+          supabase db diff --schema public --project-ref $SUPABASE_PROJECT_REF
 
       - name: Apply migrations
         if: github.event.inputs.apply == 'true' && github.event.inputs.dry_run == 'false'
