@@ -6,6 +6,9 @@ RUN install-php-extensions \
     pdo_pgsql \
     pgsql
 
+# Verify extensions are loaded
+RUN php -m | grep -E "pdo_pgsql|pgsql"
+
 # Install system dependencies needed
 RUN apk add --no-cache \
     zip \
