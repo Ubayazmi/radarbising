@@ -1,4 +1,9 @@
 {
+  "build": {
+    "docker": {
+      "dockerfile": "Dockerfile"
+    }
+  },
   "framework": null,
   "routes": [
     { "src": "/assets/(.*)", "headers": { "cache-control": "public, max-age=31536000, immutable" }, "dest": "/assets/$1" },
