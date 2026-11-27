@@ -2,13 +2,13 @@
 FROM dunglas/frankenphp:1.4-php8.2-alpine
 
 # Build cache bust - change this value to force fresh build
-ARG CACHEBUST=4
+ARG CACHEBUST=5
 RUN echo "Cache bust: $CACHEBUST"
 
-# Install PHP extensions including PostgreSQL driver
-RUN install-php-extensions \
-    pdo_pgsql \
-    pgsql
+# Install PHP extensions via apk (more reliable for Vercel cache)
+RUN apk add --no-cache \
+    php82-pdo_pgsql \
+    php82-pgsql
 
 # Verify extensions are loaded
 RUN php -m | grep -E "pdo_pgsql|pgsql"
