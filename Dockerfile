@@ -42,5 +42,5 @@ RUN mkdir -p /var/task/sessions /var/task/admin/uploads /var/task/writer/uploads
 # Expose port (Vercel Container runtime uses PORT env var)
 EXPOSE 8080
 
-# Start FrankenPHP
-CMD ["frankenphp", "php-server", "--listen", ":8080"]
+# Start FrankenPHP and make it listen on the PORT env var
+CMD ["frankenphp", "php-server", "--listen", "${PORT:-8080}"]
