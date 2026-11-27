@@ -1,15 +1,7 @@
 {
-  "buildCommand": "echo 'Using Docker runtime'",
-  "installCommand": "echo 'Using Docker runtime'",
+  "buildCommand": "echo 'Container runtime - build in Dockerfile.vercel'",
+  "installCommand": "echo 'Container runtime - install in Dockerfile.vercel'",
   "framework": null,
-  "functions": {
-    "api/index.php": { "maxDuration": 30, "runtime": "vercel-php@latest" },
-    "api/admin.php": { "maxDuration": 30, "runtime": "vercel-php@latest" },
-    "api/writer.php": { "maxDuration": 30, "runtime": "vercel-php@latest" },
-    "api/health.php": { "maxDuration": 10, "runtime": "vercel-php@latest" },
-    "api/diagnose.php": { "maxDuration": 10, "runtime": "vercel-php@latest" },
-    "api/phpinfo.php": { "maxDuration": 10, "runtime": "vercel-php@latest" }
-  },
   "routes": [
     { "src": "/assets/(.*)", "headers": { "cache-control": "public, max-age=31536000, immutable" }, "dest": "/assets/$1" },
     { "src": "/admin/assets/(.*)", "headers": { "cache-control": "public, max-age=31536000, immutable" }, "dest": "/admin/assets/$1" },
