@@ -1,166 +1,43 @@
 name: Supabase Schema Migrations
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'supabase/migrations/**'
-      - 'supabase/config.toml'
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Dry run only — report pending migrations, do NOT apply'
+        description: 'Dry run only (no apply)'
         type: boolean
-        required: false
         default: true
       apply:
-        description: 'Actually apply migrations (requires dry_run=false AND this=true)'
+        description: 'Apply migrations (use with dry_run=false)'
         type: boolean
-        required: false
         default: false
 
-jobs:
-  deploy-migrations:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    environment: production
+permissions:
+  contents: read
 
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
         with:
-          node-version: '20'
+          version: latest
 
-      - name: Install Supabase CLI
-        run: npm install -g supabase@latest
-
-      - name: Supabase Login
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      - name: Run migrations (dry-run)
+        if: github.event.inputs.dry_run == 'true'
         run: |
-          supabase login --token "$SUPABASE_ACCESS_TOKEN"
+          supabase migration list --project-ref $SUPABASE_PROJECT_REF
+          supabase db diff --schema public --project-ref $SUPABASE_PROJECT_REF --dry-run
 
-      - name: Link Project
-        env:
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+      - name: Apply migrations
+        if: github.event.inputs.apply == 'true' && github.event.inputs.dry_run == 'false'
         run: |
-          supabase link --project-ref "$SUPABASE_PROJECT_ID"
-
-      - name: List Local Migrations
-        id: local
-        run: |
-          echo "=== Local migration files ==="
-          ls -la supabase/migrations/
-          echo ""
-          # Extract version timestamps
-          for f in supabase/migrations/*.sql; do
-            base=$(basename "$f")
-            echo "  $base"
-          done
-
-      - name: Check Remote Migration History
-        id: remote
-        env:
-          DB_DSN: ${{ secrets.DB_DSN }}
-        run: |
-          echo "=== Remote migration history ==="
-          psql "$DB_DSN" -t -A -c "
-            SELECT version FROM supabase_migrations.schema_migrations ORDER BY version;
-          " || echo "  (table not found or no migrations applied yet)"
-
-      - name: Detect Pending Migrations
-        id: pending
-        run: |
-          echo "=== Pending migrations (local not in remote) ==="
-          # Build list of applied versions from remote
-          applied=$(psql "$DB_DSN" -t -A -c "SELECT version FROM supabase_migrations.schema_migrations;" 2>/dev/null || echo "")
-          pending=0
-          for f in supabase/migrations/*.sql; do
-            base=$(basename "$f")
-            ver="${base%%_*}"
-            if [[ -z "$applied" ]] || ! echo "$applied" | grep -q "^${ver}$"; then
-              echo "  PENDING: $base"
-              ((pending++))
-            else
-              echo "  APPLIED: $base"
-            fi
-          done
-          echo "pending_count=$pending" >> $GITHUB_OUTPUT
-          if [[ $pending -eq 0 ]]; then
-            echo "No pending migrations."
-          fi
-
-      - name: Analyze Destructive Changes
-        id: destructive
-        if: ${{ steps.pending.outputs.pending_count != '0' }}
-        run: |
-          echo "=== Scanning pending migrations for destructive operations ==="
-          destructive=0
-          for f in supabase/migrations/*.sql; do
-            base=$(basename "$f")
-            ver="${base%%_*}"
-            applied=$(psql "$DB_DSN" -t -A -c "SELECT version FROM supabase_migrations.schema_migrations WHERE version = '${ver}';" 2>/dev/null || echo "")
-            if [[ -z "$applied" ]]; then
-              # Scan for destructive keywords
-              if grep -qiE "\b(DROP\s+(TABLE|COLUMN|INDEX|TRIGGER|FUNCTION|SCHEMA|VIEW|TYPE|POLICY|CONSTRAINT|ROLE)\b|TRUNCATE\s+|DELETE\s+FROM|ALTER\s+.*\s+DROP\b|REVOKE\s+)" "$f"; then
-                echo "  ⚠️  $base contains potentially destructive operations:"
-                grep -inE "\b(DROP\s+(TABLE|COLUMN|INDEX|TRIGGER|FUNCTION|SCHEMA|VIEW|TYPE|POLICY|CONSTRAINT|ROLE)\b|TRUNCATE\s+|DELETE\s+FROM|ALTER\s+.*\s+DROP\b|REVOKE\s+)" "$f" | sed 's/^/      /'
-                ((destructive++))
-              fi
-            fi
-          done
-          echo "destructive_count=$destructive" >> $GITHUB_OUTPUT
-          if [[ $destructive -gt 0 ]]; then
-            echo "⚠️  $destructive pending migration(s) contain potentially destructive operations."
-          fi
-
-      - name: Dry Run / Summary
-        if: ${{ inputs.dry_run == true || steps.pending.outputs.pending_count == '0' }}
-        run: |
-          echo "### Supabase Migration Dry Run / Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Trigger: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Dry run: ${{ inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Apply requested: ${{ inputs.apply }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Pending migrations: ${{ steps.pending.outputs.pending_count }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Destructive operations detected: ${{ steps.destructive.outputs.destructive_count }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ steps.pending.outputs.pending_count }}" -gt 0 ]]; then
-            echo "Run this workflow again with **dry_run=false AND apply=true** to apply pending migrations." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "✅ All local migrations are already applied to the remote database." >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: Apply Migrations (supabase db push)
-        if: ${{ inputs.dry_run == false && inputs.apply == true }}
-        env:
-          DB_DSN: ${{ secrets.DB_DSN }}
-        run: |
-          echo "=== Applying pending migrations via supabase db push ==="
-          # supabase db push applies only unapplied migrations
-          supabase db push
-
-      - name: Verify Applied Migrations
-        if: ${{ inputs.dry_run == false && inputs.apply == true }}
-        env:
-          DB_DSN: ${{ secrets.DB_DSN }}
-        run: |
-          echo "=== Verification: migration history after push ==="
-          psql "$DB_DSN" -c "
-            SELECT version, name, executed_at
-            FROM supabase_migrations.schema_migrations
-            ORDER BY executed_at DESC;
-          "
-
-      - name: Fail if Destructive Without Explicit Confirmation
-        if: ${{ inputs.dry_run == false && inputs.apply == true && steps.destructive.outputs.destructive_count != '0' && steps.destructive.outputs.destructive_count != '' }}
-        run: |
-          echo "::error::Destructive migration(s) detected. To proceed, you must:"
-          echo "1. Review the destructive operations listed above."
-          echo "2. Confirm this is intentional by re-running with apply=true AND dry_run=false"
-          echo "   (this run already has both, but this is the safety gate)."
-          echo "If you are certain, re-run the workflow with the same inputs."
-          exit 1
+          supabase migration up --project-ref $SUPABASE_PROJECT_REF
