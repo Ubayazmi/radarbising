@@ -28,8 +28,9 @@ COPY . .
 RUN mkdir -p /var/task/sessions /var/task/admin/uploads /var/task/writer/uploads \
     && chmod -R 755 /var/task/sessions /var/task/admin/uploads /var/task/writer/uploads
 
-# Expose port (Vercel Container runtime uses PORT env var, but FrankenPHP default 8080)
+# Expose port (Vercel sets PORT env var)
 EXPOSE 8080
 
-# Start FrankenPHP on port 8080 (fixed port, Vercel will map $PORT to this)
-CMD ["frankenphp", "php-server", "--listen", "0.0.0.0:8080"]
+# Start FrankenPHP listening on PORT env var (Vercel sets this)
+# Using shell to expand $PORT
+CMD ["sh", "-c", "frankenphp php-server --listen 0.0.0.0:$PORT"]
