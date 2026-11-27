@@ -1,0 +1,27 @@
+# Docker ignore - files not to copy into Docker image
+.git
+.github
+node_modules
+vendor
+database.sqlite*
+database.sqlite-*
+admin/uploads/*
+writer/uploads/*
+*.log
+*.bak
+*.drawio*
+.env
+.env.local
+.env.*.local
+composer.phar
+dump_schema*.php
+migrate.php
+docs/
+README_MIGRATION.md
+SECRETS_SETUP.md
+Layout*
+*.md
+!vercel.json
+!.vercelignore
+!Dockerfile
+!.dockerignore

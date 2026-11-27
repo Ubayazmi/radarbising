@@ -61,4 +61,4 @@ RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \
 EXPOSE 8080
 
 # Start PHP built-in server on PORT from Vercel
-CMD php -S 0.0.0.0:${PORT:-8080} api/index.php
+CMD php -S 0.0.0.0:${PORT:-8080} index.php

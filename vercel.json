@@ -1,22 +1,16 @@
 {
-  "build": {
-    "docker": {
-      "dockerfile": "Dockerfile"
-    }
-  },
-  "framework": null,
+  "framework": "docker",
+  "buildCommand": "echo 'Using Dockerfile'",
+  "devCommand": "docker run --rm -p 3000:8080 $(docker build -q .)",
+  "installCommand": "echo 'Dependencies installed in Docker image'",
   "routes": [
     { "src": "/assets/(.*)", "headers": { "cache-control": "public, max-age=31536000, immutable" }, "dest": "/assets/$1" },
     { "src": "/admin/assets/(.*)", "headers": { "cache-control": "public, max-age=31536000, immutable" }, "dest": "/admin/assets/$1" },
     { "src": "/writer/assets/(.*)", "headers": { "cache-control": "public, max-age=31536000, immutable" }, "dest": "/writer/assets/$1" },
     { "src": "/favicon.ico", "dest": "/favicon.ico" },
     { "src": "/favicon.png", "dest": "/favicon.png" },
-    { "src": "/health.php", "dest": "/api/health.php" },
-    { "src": "/diagnose.php", "dest": "/api/diagnose.php" },
-    { "src": "/phpinfo.php", "dest": "/api/phpinfo.php" },
-    { "src": "/admin/(.*)", "dest": "/api/admin.php" },
-    { "src": "/writer/(.*)", "dest": "/api/writer.php" },
-    { "src": "/(.*)", "dest": "/api/index.php" }
+    { "src": "/health.php", "dest": "/health.php" },
+    { "src": "/(.*)", "dest": "/index.php" }
   ],
   "env": { "APP_ENV": "production", "APP_DEBUG": "false" }
 }
