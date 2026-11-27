@@ -2,13 +2,20 @@
 FROM php:8.2-fpm-alpine
 
 # Build cache bust
-ARG CACHEBUST=6
+ARG CACHEBUST=7
 RUN echo "Cache bust: $CACHEBUST"
 
 # Install PHP extensions
 RUN apk add --no-cache \
     postgresql-dev \
     libpq \
+    oniguruma-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    icu-dev \
+    libzip-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
     pdo_pgsql \
     pgsql \
